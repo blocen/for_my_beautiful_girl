@@ -92,7 +92,7 @@
     const probe = document.createElement("pre");
     probe.style.cssText = "position:absolute;visibility:hidden;margin:0;white-space:pre;";
     probe.style.fontFamily = getComputedStyle(screen).fontFamily;
-    probe.style.lineHeight = getComputedStyle(screen).lineHeight;
+    probe.style.lineHeight = "1"; // matches #screen's line-height
     probe.style.fontSize = "100px";
     probe.textContent = "M".repeat(100);
     document.body.appendChild(probe);
