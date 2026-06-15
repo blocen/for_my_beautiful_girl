@@ -51,6 +51,27 @@
     return '<span style="color:' + palette[c] + '">' + text + "</span>";
   }
 
+  // The rose is centered in a wide canvas with empty side padding; find the
+  // content bounding box once so we can scale/center to it rather than to W.
+  let minX = W, maxX = 0, minY = H, maxY = 0;
+  for (const f of D.FRAMES) {
+    const c = f.c;
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        if (c[y * W + x] !== " ") {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+  }
+  const contentW = maxX - minX + 1;
+  const contentH = maxY - minY + 1;
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+
   // Pre-render all frames once, then swap innerHTML on a timer.
   const rendered = D.FRAMES.map(render);
   let i = 0;
@@ -67,19 +88,22 @@
   }
   requestAnimationFrame(loop);
 
-  // Scale the monospace block to fit the viewport.
+  // Scale the rose content to fit the viewport and center it. The full canvas
+  // overflows on the (empty) sides and is clipped by body's overflow:hidden.
+  const CW = 0.6; // monospace char width / font-size
+  const CH = 1.0; // line height / font-size
   function fit() {
-    const pad = 32;
-    const availW = window.innerWidth - pad;
-    const availH = window.innerHeight - 120;
-    // base font metrics measured from a probe
-    const base = 10; // px font-size baseline
-    const cw = base * 0.6;   // monospace char width approx
-    const ch = base * 1.0;   // line height approx
-    const scaleW = availW / (W * cw);
-    const scaleH = availH / (H * ch);
-    const fs = base * Math.min(scaleW, scaleH);
+    const titleH = document.querySelector("h1").offsetHeight || 0;
+    const pad = 16;
+    const availW = window.innerWidth - pad * 2;
+    const availH = window.innerHeight - titleH - pad * 4;
+    const fs = Math.min(availW / (contentW * CW), availH / (contentH * CH));
     screen.style.fontSize = fs + "px";
+    // Shift the content's center to the block's center (and thus the viewport).
+    const dx = (W / 2 - centerX) * CW * fs;
+    const dy = (H / 2 - centerY) * CH * fs;
+    screen.style.transform = "translate(" + dx + "px," + dy + "px)";
+    screen.style.textShadow = "0 0 " + Math.max(1, fs * 0.3) + "px currentColor";
   }
   window.addEventListener("resize", fit);
   fit();
