@@ -94,10 +94,28 @@
   }
   requestAnimationFrame(loop);
 
+  const REF = 100;
+
+  // The rose was authored for a cell ~0.6 as wide as it is tall (SF Mono).
+  // Other platforms fall back to monospace fonts with a different advance
+  // width, which distorts the aspect. Measure the device's real char width and
+  // correct it with letter-spacing (in em, so it holds at any font size).
+  const TARGET_RATIO = 0.6;
+  (function normalizeCellAspect() {
+    const probe = document.createElement("pre");
+    probe.style.cssText = "position:absolute;visibility:hidden;margin:0;white-space:pre;letter-spacing:0;line-height:1;";
+    probe.style.fontFamily = getComputedStyle(screen).fontFamily;
+    probe.style.fontSize = REF + "px";
+    probe.textContent = "M".repeat(200);
+    document.body.appendChild(probe);
+    const ratio = probe.getBoundingClientRect().width / (200 * REF);
+    document.body.removeChild(probe);
+    screen.style.letterSpacing = (TARGET_RATIO - ratio) + "em";
+  })();
+
   // The <pre> holds only the cropped rose. Rather than guessing the device's
   // font metrics (which differ across platforms), render at a reference size,
   // measure the real box, then scale the font so the whole rose fits.
-  const REF = 100;
   function fit() {
     if (!screen.firstChild) screen.innerHTML = rendered[0];
     const titleH = document.querySelector("h1").offsetHeight || 0;
