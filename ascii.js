@@ -22,9 +22,9 @@
     const chars = frame.c;
     const cols = decodeCols(frame.p);
     let html = "";
-    for (let y = 0; y < H; y++) {
+    for (let y = minY; y <= maxY; y++) {
       let runColor = -1, runText = "";
-      for (let x = 0; x < W; x++) {
+      for (let x = minX; x <= maxX; x++) {
         const k = y * W + x;
         let ch = chars[k];
         const c = cols[k];
@@ -51,8 +51,8 @@
     return '<span style="color:' + palette[c] + '">' + text + "</span>";
   }
 
-  // The rose is centered in a wide canvas with empty side padding; find the
-  // content bounding box once so we can scale/center to it rather than to W.
+  // The rose sits in a wide canvas with empty side padding; find its content
+  // bounding box so render() can crop to just the rose (no wasted margins).
   let minX = W, maxX = 0, minY = H, maxY = 0;
   for (const f of D.FRAMES) {
     const c = f.c;
@@ -69,8 +69,6 @@
   }
   const contentW = maxX - minX + 1;
   const contentH = maxY - minY + 1;
-  const centerX = (minX + maxX) / 2;
-  const centerY = (minY + maxY) / 2;
 
   // Pre-render all frames once, then swap innerHTML on a timer.
   const rendered = D.FRAMES.map(render);
@@ -104,8 +102,8 @@
   }
   const { cw: CW, ch: CH } = measureMetrics();
 
-  // Scale the rose content to fit the viewport and center it. The full canvas
-  // overflows on the (empty) sides and is clipped by body's overflow:hidden.
+  // The <pre> now holds only the cropped rose, so flex centering handles
+  // placement; we just scale the font so the whole rose fits the viewport.
   function fit() {
     const titleH = document.querySelector("h1").offsetHeight || 0;
     const pad = 16;
@@ -114,10 +112,6 @@
     const availH = window.innerHeight - titleH - pad * 4;
     const fs = Math.min(availW / (contentW * CW), availH / (contentH * CH));
     screen.style.fontSize = fs + "px";
-    // Shift the content's center to the block's center (and thus the viewport).
-    const dx = (W / 2 - centerX) * CW * fs;
-    const dy = (H / 2 - centerY) * CH * fs;
-    screen.style.transform = "translate(" + dx + "px," + dy + "px)";
     screen.style.textShadow = "0 0 " + Math.max(1, fs * 0.3) + "px currentColor";
   }
   window.addEventListener("resize", fit);
