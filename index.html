@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rose</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      background: radial-gradient(circle at 50% 35%, #150b12 0%, #050204 70%);
+      padding: 1rem;
+      overflow: hidden;
+    }
+    h1 {
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-weight: 500;
+      font-size: clamp(1.1rem, 3vw, 1.8rem);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ff9ec4, #ff5d8f, #c83a6b);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      opacity: 0;
+      animation: title-fade 4s ease-in 5s forwards;
+    }
+    @keyframes title-fade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    #screen {
+      font-family: "SF Mono", "Menlo", "Consolas", ui-monospace, monospace;
+      line-height: 1;
+      white-space: pre;
+      letter-spacing: 0;
+      font-size: 6px;
+      text-shadow: 0 0 2px currentColor;
+      filter: saturate(1.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>For My Beautiful Girl</h1>
+  <pre id="screen" aria-label="ASCII animation of a rose growing"></pre>
+  <script src="./frames2.js"></script>
+  <script src="./ascii.js"></script>
+</body>
+</html>
