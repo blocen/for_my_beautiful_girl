@@ -67,18 +67,26 @@
       }
     }
   }
-  const contentW = maxX - minX + 1;
-  const contentH = maxY - minY + 1;
-
   // Pre-render all frames once, then swap innerHTML on a timer.
   const rendered = D.FRAMES.map(render);
   let i = 0;
   const interval = 1000 / D.FPS;
   let last = 0;
 
+  // Fade the title in as the rose blooms and out before the loop restarts, so
+  // it cycles together with the animation instead of fading in just once.
+  const title = document.querySelector("h1");
+  function titleOpacity(p) {
+    if (p < 0.35) return 0;
+    if (p < 0.6) return (p - 0.35) / 0.25; // fade in
+    if (p < 0.9) return 1;                  // hold
+    return 1 - (p - 0.9) / 0.1;             // fade out before restart
+  }
+
   function loop(t) {
     if (t - last >= interval) {
       screen.innerHTML = rendered[i];
+      title.style.opacity = titleOpacity(i / (rendered.length - 1));
       i = (i + 1) % rendered.length;
       last = t;
     }
@@ -86,31 +94,20 @@
   }
   requestAnimationFrame(loop);
 
-  // Measure the actual monospace metrics (char advance width and line height,
-  // as ratios of font-size) so fitting is exact rather than a guess.
-  function measureMetrics() {
-    const probe = document.createElement("pre");
-    probe.style.cssText = "position:absolute;visibility:hidden;margin:0;white-space:pre;";
-    probe.style.fontFamily = getComputedStyle(screen).fontFamily;
-    probe.style.lineHeight = "1"; // matches #screen's line-height
-    probe.style.fontSize = "100px";
-    probe.textContent = "M".repeat(100);
-    document.body.appendChild(probe);
-    const r = probe.getBoundingClientRect();
-    document.body.removeChild(probe);
-    return { cw: r.width / 100 / 100, ch: r.height / 100 };
-  }
-  const { cw: CW, ch: CH } = measureMetrics();
-
-  // The <pre> now holds only the cropped rose, so flex centering handles
-  // placement; we just scale the font so the whole rose fits the viewport.
+  // The <pre> holds only the cropped rose. Rather than guessing the device's
+  // font metrics (which differ across platforms), render at a reference size,
+  // measure the real box, then scale the font so the whole rose fits.
+  const REF = 100;
   function fit() {
+    if (!screen.firstChild) screen.innerHTML = rendered[0];
     const titleH = document.querySelector("h1").offsetHeight || 0;
     const pad = 16;
-    // Leave headroom for the glow (text-shadow) so it isn't clipped either.
-    const availW = (window.innerWidth - pad * 2) * 0.96;
+    const availW = window.innerWidth - pad * 2;
     const availH = window.innerHeight - titleH - pad * 4;
-    const fs = Math.min(availW / (contentW * CW), availH / (contentH * CH));
+    screen.style.fontSize = REF + "px";
+    const box = screen.getBoundingClientRect();
+    // 0.98 leaves a little headroom for the glow (text-shadow).
+    const fs = REF * Math.min(availW / box.width, availH / box.height) * 0.98;
     screen.style.fontSize = fs + "px";
     screen.style.textShadow = "0 0 " + Math.max(1, fs * 0.3) + "px currentColor";
   }
