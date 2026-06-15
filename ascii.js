@@ -88,14 +88,29 @@
   }
   requestAnimationFrame(loop);
 
+  // Measure the actual monospace metrics (char advance width and line height,
+  // as ratios of font-size) so fitting is exact rather than a guess.
+  function measureMetrics() {
+    const probe = document.createElement("pre");
+    probe.style.cssText = "position:absolute;visibility:hidden;margin:0;white-space:pre;";
+    probe.style.fontFamily = getComputedStyle(screen).fontFamily;
+    probe.style.lineHeight = getComputedStyle(screen).lineHeight;
+    probe.style.fontSize = "100px";
+    probe.textContent = "M".repeat(100);
+    document.body.appendChild(probe);
+    const r = probe.getBoundingClientRect();
+    document.body.removeChild(probe);
+    return { cw: r.width / 100 / 100, ch: r.height / 100 };
+  }
+  const { cw: CW, ch: CH } = measureMetrics();
+
   // Scale the rose content to fit the viewport and center it. The full canvas
   // overflows on the (empty) sides and is clipped by body's overflow:hidden.
-  const CW = 0.6; // monospace char width / font-size
-  const CH = 1.0; // line height / font-size
   function fit() {
     const titleH = document.querySelector("h1").offsetHeight || 0;
     const pad = 16;
-    const availW = window.innerWidth - pad * 2;
+    // Leave headroom for the glow (text-shadow) so it isn't clipped either.
+    const availW = (window.innerWidth - pad * 2) * 0.96;
     const availH = window.innerHeight - titleH - pad * 4;
     const fs = Math.min(availW / (contentW * CW), availH / (contentH * CH));
     screen.style.fontSize = fs + "px";
